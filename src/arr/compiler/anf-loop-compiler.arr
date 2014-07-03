@@ -409,7 +409,7 @@ fun compile-split-method-app(l, compiler, opt-dest, obj, methname, args, opt-bod
           ]),
           j-block([list:
             check-fun(compiler.get-loc(l), colon-field-id.id-j),
-            j-expr(j-assign(ans, j-app(colon-field-id.id-j, compiled-args)))
+            j-expr(j-assign(ans, app(compiler.get-loc(l), colon-field-id.id-j, compiled-args)))
           ])),
         j-break]),
     new-cases)
@@ -817,6 +817,7 @@ compiler-visitor = {
     #   j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end), compiled-body-method))
     step-curry = js-id-of(compiler-name("step"))
     temp-curry = js-id-of(compiler-name("temp_curry"))
+    temp-full = js-id-of(compiler-name("temp_full"))
     # NOTE: excluding self, args may be empty, so we need at least one name ("resumer") for the stack convention
     effective-curry-args =
       if args.length() > 1: args.rest
@@ -827,13 +828,16 @@ compiler-visitor = {
     curry-var = j-var(temp-curry,
       j-fun(effective-curry-args.map(lam(a): js-id-of(a.id.tostring()) end), compiled-body-curry))
     #### TODO!
+    full-var = 
+      j-var(temp-full,
+        j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end),
+          compile-fun-body(l, step-curry, temp-full, self, args, args.length(), body)
+        ))
     c-exp(
       rt-method("makeMethod", [list: j-fun([list: js-id-of(args.first.id.tostring())],
             j-block([list: curry-var, j-return(j-id(temp-curry))])),
-          j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end),
-            compile-fun-body(l, step-curry, temp-curry, self, args, args.length(), body)
-          )]),
-      empty)
+          j-id(temp-full)]),
+      [list: full-var])
   end,
   a-val(self, v :: N.AVal):
     v.visit(self)

@@ -810,14 +810,14 @@ compiler-visitor = {
                 compile-fun-body(l, new-step, temp, self, effective-args, args.length(), body)))])
   end,
   a-method(self, l :: Loc, args :: List<N.ABind>, ret :: A.Ann, body :: N.AExpr):
-    # step-method = js-id-of(compiler-name("step"))
-    # temp-method = compiler-name("temp_method")
-    # compiled-body-method = compile-fun-body(l, step-method, temp-method, self, args, args.length() - 1, body)
-    # method-var = j-var(temp-method,
-    #   j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end), compiled-body-method))
+    step-method = js-id-of(compiler-name("step"))
+    temp-method = compiler-name("temp_method")
+    compiled-body-method = compile-fun-body(l, step-method, temp-method, self, args, args.length(), body)
+    method-var = j-var(temp-method,
+      j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end), compiled-body-method))
     step-curry = js-id-of(compiler-name("step"))
     temp-curry = js-id-of(compiler-name("temp_curry"))
-    temp-full = js-id-of(compiler-name("temp_full"))
+    # temp-full = js-id-of(compiler-name("temp_full"))
     # NOTE: excluding self, args may be empty, so we need at least one name ("resumer") for the stack convention
     effective-curry-args =
       if args.length() > 1: args.rest
@@ -828,16 +828,16 @@ compiler-visitor = {
     curry-var = j-var(temp-curry,
       j-fun(effective-curry-args.map(lam(a): js-id-of(a.id.tostring()) end), compiled-body-curry))
     #### TODO!
-    full-var = 
-      j-var(temp-full,
-        j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end),
-          compile-fun-body(l, step-curry, temp-full, self, args, args.length(), body)
-        ))
+    #full-var = 
+    #  j-var(temp-full,
+    #    j-fun(args.map(lam(a): js-id-of(a.id.tostring()) end),
+    #      compile-fun-body(l, step-curry, temp-full, self, args, args.length(), body)
+    #    ))
     c-exp(
       rt-method("makeMethod", [list: j-fun([list: js-id-of(args.first.id.tostring())],
             j-block([list: curry-var, j-return(j-id(temp-curry))])),
-          j-id(temp-full)]),
-      [list: full-var])
+          j-id(temp-method)]),
+      [list: method-var])
   end,
   a-val(self, v :: N.AVal):
     v.visit(self)

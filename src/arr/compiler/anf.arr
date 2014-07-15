@@ -39,8 +39,11 @@ fun anf-term(e :: A.Expr) -> N.AExpr:
   anf(e, k-cont(lam(x):
         cases(N.ALettable) x:
             # tail call
-          | a-app(l, f, args) =>
+          | a-app(l, _, _) =>
             name = mk-id(l, "anf_tail_app")
+            N.a-let(l, name.id-b, x, N.a-lettable(N.a-val(name.id-e)))
+          | a-method-app(l, _, _, _) =>
+            name = mk-id(l, "anf_tail_method_app")
             N.a-let(l, name.id-b, x, N.a-lettable(N.a-val(name.id-e)))
           | else => N.a-lettable(x)
         end
